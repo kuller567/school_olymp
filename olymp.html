@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Школьный Олимп — Платформа Школьных Конкурсов</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .hero-gradient { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4338ca 100%); }
+    .modal-backdrop { background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-tab { animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col custom-scrollbar">
+
+  <!-- ВХОДНОЙ ЭКРАН / МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ -->
+  <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-100 transform transition-all duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      
+      <div class="hero-gradient p-8 text-white text-center relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 opacity-10 text-white pointer-events-none">
+          <i class="fa-solid fa-graduation-cap text-9xl"></i>
+        </div>
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 mb-3 backdrop-blur-md border border-white/20 shadow-inner">
+          <i class="fa-solid fa-award text-3xl text-amber-300"></i>
+        </div>
+        <h2 class="text-2xl font-extrabold tracking-tight">Школьный Олимп</h2>
+        <p class="text-xs text-indigo-200 mt-1.5 font-medium">Платформа школьных конкурсов и олимпиад</p>
+      </div>
+
+      <div class="flex border-b border-slate-100 bg-slate-50/80 p-1.5">
+        <button type="button" id="tabLoginBtn" onclick="switchAuthTab('login')" class="flex-1 py-2.5 text-xs font-bold rounded-xl text-indigo-600 bg-white shadow-sm transition-all">Вход</button>
+        <button type="button" id="tabRegisterBtn" onclick="switchAuthTab('register')" class="flex-1 py-2.5 text-xs font-bold rounded-xl text-slate-500 hover:text-indigo-600 transition-all">Регистрация</button>
+      </div>
+
+      <div class="p-6 sm:p-8">
+        <div id="authAlert" class="hidden mb-4 p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2.5"></div>
+
+        <!-- ФОРМА ВХОДА -->
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email адрес</label>
+            <div class="relative">
+              <i class="fa-solid fa-envelope absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+              <input type="email" id="loginEmail" required placeholder="example@school.ru" autocomplete="off" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Пароль</label>
+              <button type="button" onclick="openForgotModal()" class="text-[11px] font-bold text-indigo-600 hover:underline">Забыли пароль?</button>
+            </div>
+            <div class="relative">
+              <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+              <input type="password" id="loginPassword" required placeholder="••••••••" autocomplete="new-password" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+          </div>
+          <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all text-sm flex items-center justify-center gap-2">
+            <span>Войти в аккаунт</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </button>
+        </form>
+
+        <!-- ФОРМА РЕГИСТРАЦИИ -->
+        <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3.5 hidden" autocomplete="off">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Роль в системе</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="border-2 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer transition-all border-indigo-600 bg-indigo-50/50" id="roleStudentLabel">
+                <input type="radio" name="regRole" value="student" checked onclick="toggleRoleFields('student')" class="text-indigo-600 focus:ring-indigo-500">
+                <span class="text-xs font-bold text-slate-800">Ученик</span>
+              </label>
+              <label class="border-2 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer transition-all border-slate-200" id="roleTeacherLabel">
+                <input type="radio" name="regRole" value="teacher" onclick="toggleRoleFields('teacher')" class="text-indigo-600 focus:ring-indigo-500">
+                <span class="text-xs font-bold text-slate-800">Учитель</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">ФИО полностью</label>
+            <input type="text" id="regFullName" required placeholder="Иванов Иван Алексеевич" autocomplete="off" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+
+          <div id="classFieldBlock">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Класс</label>
+            <input type="text" id="regClass" placeholder="8Б" autocomplete="off" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+
+          <div id="teacherPinBlock" class="hidden">
+            <label class="block text-[11px] font-bold text-amber-700 uppercase tracking-wider mb-1">Секретный PIN-код школы</label>
+            <input type="password" id="regTeacherPin" placeholder="Введите PIN-код" autocomplete="new-password" class="w-full px-3.5 py-2 border border-amber-300 bg-amber-50/50 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+            <span class="text-[10px] text-slate-400 mt-1 block">По умолчанию: TEACHER2026</span>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Email</label>
+            <input type="email" id="regEmail" required placeholder="student@mail.ru" autocomplete="off" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Пароль</label>
+            <input type="password" id="regPassword" required minlength="6" placeholder="Минимум 6 символов" autocomplete="new-password" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all text-sm mt-2">
+            Зарегистрироваться
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ ВЫХОДА -->
+  <div id="confirmLogoutModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 text-center space-y-4">
+      <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-600 mx-auto flex items-center justify-center text-xl"><i class="fa-solid fa-right-from-bracket"></i></div>
+      <div>
+        <h3 class="font-extrabold text-base text-slate-900">Выход из аккаунта</h3>
+        <p class="text-xs text-slate-500 mt-1">Вы действительно хотите выйти? Ваши данные сессии будут очищены в целях безопасности.</p>
+      </div>
+      <div class="flex gap-2.5 pt-2">
+        <button type="button" onclick="closeLogoutConfirm()" class="flex-1 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600">Отмена</button>
+        <button type="button" onclick="executeLogout()" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md">Да, выйти</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО: ПРОСМОТР РЕШЕНИЯ УЧЕНИКА ДЛЯ УЧИТЕЛЯ -->
+  <div id="viewStudentWorkModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 sm:p-8 space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <span id="modalWorkStudentClass" class="text-[10px] font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase"></span>
+          <h3 id="modalWorkStudentName" class="font-extrabold text-base text-slate-900 mt-1"></h3>
+        </div>
+        <button type="button" onclick="closeViewStudentWorkModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+
+      <div class="text-xs text-slate-400 font-medium">Олимпиада: <span id="modalWorkContestTitle" class="text-slate-700 font-bold"></span></div>
+
+      <div id="modalWorkContentArea" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs text-slate-700 leading-relaxed max-h-60 overflow-y-auto custom-scrollbar"></div>
+
+      <div class="flex justify-end pt-2">
+        <button type="button" onclick="closeViewStudentWorkModal()" class="px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-xs shadow-md">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ШАПКА / НАВИГАЦИЯ -->
+  <header class="bg-white/85 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl hero-gradient text-amber-300 flex items-center justify-center font-black text-xl shadow-md shadow-indigo-200">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div>
+          <span class="font-extrabold text-base tracking-tight text-slate-900 block leading-tight">Школьный Олимп</span>
+          <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Олимпиады и конкурсы</span>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-1 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60 text-xs font-bold">
+        <button type="button" onclick="switchTab('catalog')" id="navCatalogBtn" class="px-4 py-2 rounded-xl text-indigo-600 bg-white shadow-sm transition-all flex items-center gap-2">
+          <i class="fa-solid fa-trophy"></i> Олимпиады
+        </button>
+        <button type="button" onclick="switchTab('dashboard')" id="navDashboardBtn" class="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-id-card"></i> Мои решения
+        </button>
+        <button type="button" onclick="switchTab('leaderboard')" id="navLeaderboardBtn" class="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-ranking-star"></i> Рейтинг
+        </button>
+        <button type="button" onclick="switchTab('incubator')" id="navIncubatorBtn" class="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-lightbulb"></i> Идеи и сайты
+        </button>
+        <button type="button" onclick="switchTab('admin')" id="navAdminBtn" class="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2 hidden">
+          <i class="fa-solid fa-user-shield"></i> Панель Учителя
+        </button>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <!-- КНОПКА УВЕДОМЛЕНИЙ -->
+        <div id="notificationContainer" class="relative hidden">
+          <button type="button" onclick="toggleNotifications()" class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center relative transition-all">
+            <i class="fa-solid fa-bell text-sm"></i>
+            <span id="notifBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-[10px] font-extrabold flex items-center justify-center border-2 border-white hidden">0</span>
+          </button>
+          <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 p-4 z-50">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+              <span class="font-extrabold text-xs text-slate-800">Уведомления</span>
+              <button type="button" onclick="clearNotifications()" class="text-[10px] font-bold text-indigo-600 hover:underline">Очистить</button>
+            </div>
+            <div id="notifList" class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar"></div>
+          </div>
+        </div>
+
+        <!-- КНОПКА ПРОФИЛЯ -->
+        <button type="button" onclick="switchTab('profile')" id="navProfileBtn" class="flex items-center gap-2.5 p-1.5 pr-3 bg-slate-100 hover:bg-slate-200/80 rounded-2xl transition-all border border-slate-200/60">
+          <div id="headerUserAvatar" class="w-9 h-9 rounded-xl bg-indigo-600 text-white font-extrabold flex items-center justify-center text-sm shadow-sm overflow-hidden bg-cover bg-center">
+            U
+          </div>
+          <div class="text-left hidden sm:block">
+            <div id="headerUserName" class="text-xs font-bold text-slate-800 leading-tight">Пользователь</div>
+            <div id="headerUserRole" class="text-[10px] font-semibold text-slate-400">Ученик</div>
+          </div>
+        </button>
+
+        <button type="button" onclick="confirmLogout()" title="Выйти" class="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all ml-1">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ОСНОВНОЙ КОНТЕНТ -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- 1. КАТАЛОГ ОЛИМПИАД -->
+    <section id="sectionCatalog" class="space-y-8 animate-tab">
+      <div class="hero-gradient rounded-3xl p-6 sm:p-10 text-white shadow-2xl relative overflow-hidden border border-indigo-800/50">
+        <div class="absolute -right-12 -top-12 opacity-10 text-white pointer-events-none"><i class="fa-solid fa-award text-[280px]"></i></div>
+        <div class="relative z-10 max-w-2xl">
+          <span class="bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[11px] font-bold px-3 py-1 rounded-full inline-block mb-3 backdrop-blur-md">Сезон 2026–2027</span>
+          <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3">Олимпиады и конкурсы школы</h1>
+          <p class="text-indigo-200 text-xs sm:text-sm mb-8 leading-relaxed font-normal">Читайте условия задач, скачивайте материалы от учителей, решайте и отправляйте ответы для получения дипломов!</p>
+          
+          <div class="bg-white/10 backdrop-blur-xl p-2.5 rounded-2xl border border-white/20 flex flex-col sm:flex-row gap-2.5 shadow-2xl">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-white/50 text-sm"></i>
+              <input type="text" id="searchInput" oninput="renderCatalog()" placeholder="Поиск по названию или предмету..." class="w-full pl-10 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-xs sm:text-sm text-white placeholder-white/50 outline-none">
+            </div>
+            <select id="statusFilter" onchange="renderCatalog()" class="bg-slate-900/80 border border-white/20 rounded-xl text-xs text-white px-3 py-2.5 outline-none font-semibold">
+              <option value="all">Все статусы</option>
+              <option value="active">Идет прием ответов</option>
+              <option value="review">На проверке</option>
+              <option value="completed">Завершенные</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="catalogGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- 2. ЛИЧНЫЙ КАБИНЕТ УЧЕНИКА -->
+    <section id="sectionDashboard" class="space-y-6 hidden animate-tab">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl border border-indigo-100"><i class="fa-solid fa-paper-plane"></i></div>
+            <div><div id="statTotalApps" class="text-3xl font-black text-slate-900">0</div><div class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">Всего заявок</div></div>
+          </div>
+        </div>
+        <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl border border-amber-100"><i class="fa-solid fa-medal"></i></div>
+          <div><div id="statAwards" class="text-3xl font-black text-slate-900">0</div><div class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">Призовых мест</div></div>
+        </div>
+        <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl border border-emerald-100"><i class="fa-solid fa-star"></i></div>
+            <div><div id="statScore" class="text-3xl font-black text-slate-900">0</div><div class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">Сумма баллов</div></div>
+          </div>
+          <button type="button" onclick="downloadPortfolio()" title="Скачать защищенное портфолио" class="p-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center text-base"><i class="fa-solid fa-file-pdf"></i></button>
+        </div>
+      </div>
+      
+      <!-- Мои решения олимпиад -->
+      <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden mb-6">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <h2 class="font-extrabold text-slate-800 text-lg flex items-center gap-2.5"><i class="fa-solid fa-list-check text-indigo-600"></i> Мои решения и участия</h2>
+          <button type="button" onclick="downloadPortfolio()" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition-all flex items-center gap-2"><i class="fa-solid fa-file-arrow-down"></i> Скачать портфолио с QR-кодом</button>
+        </div>
+        <div id="myApplicationsList" class="divide-y divide-slate-100"></div>
+      </div>
+
+      <!-- Мои отправленные идеи и сайты с отображением статуса модерации -->
+      <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-6 space-y-4">
+        <h2 class="font-extrabold text-slate-800 text-lg flex items-center gap-2.5"><i class="fa-solid fa-lightbulb text-purple-600"></i> Мои идеи и проекты на платформе</h2>
+        <div id="myProjectsList" class="divide-y divide-slate-100"></div>
+      </div>
+    </section>
+
+    <!-- 3. ДОСКА ПОЧЁТА / РЕЙТИНГ УЧЕНИКОВ -->
+    <section id="sectionLeaderboard" class="space-y-6 hidden animate-tab">
+      <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm">
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-100">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl border border-amber-100">
+              <i class="fa-solid fa-ranking-star"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-extrabold text-slate-900">Школьная доска почёта</h2>
+              <p class="text-xs text-slate-500 font-medium mt-0.5">Рейтинг учеников школы по сумме баллов за олимпиады</p>
+            </div>
+          </div>
+
+          <!-- Вкладки рейтинга: В целом и по классам (1-11) -->
+          <div class="flex flex-wrap items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200/60 self-start md:self-auto">
+            <button type="button" id="leaderboardTabAll" onclick="setLeaderboardMode('all')" class="px-4 py-2 rounded-xl text-xs font-bold text-indigo-600 bg-white shadow-sm transition-all flex items-center gap-1.5">
+              <i class="fa-solid fa-globe"></i> Общий рейтинг
+            </button>
+            <button type="button" id="leaderboardTabClass" onclick="setLeaderboardMode('class')" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+              <i class="fa-solid fa-users"></i> По классам
+            </button>
+            
+            <select id="leaderboardClassSelect" onchange="renderLeaderboard()" class="hidden border border-slate-300 rounded-xl text-xs p-2 outline-none bg-white font-bold text-slate-700">
+              <option value="1">1 класс</option>
+              <option value="2">2 класс</option>
+              <option value="3">3 класс</option>
+              <option value="4">4 класс</option>
+              <option value="5">5 класс</option>
+              <option value="6">6 класс</option>
+              <option value="7">7 класс</option>
+              <option value="8" selected>8 класс</option>
+              <option value="9">9 класс</option>
+              <option value="10">10 класс</option>
+              <option value="11">11 класс</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-[10px] uppercase tracking-wider font-extrabold text-slate-400 border-b border-slate-200/80">
+                <th class="p-4 w-16 text-center">Место</th>
+                <th class="p-4">Ученик</th>
+                <th class="p-4">Класс</th>
+                <th class="p-4 text-center">Побед</th>
+                <th class="p-4 text-right">Сумма баллов</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardTable" class="divide-y divide-slate-100 text-xs font-semibold"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. КАТАЛОГ ИДЕЙ И САЙТОВ УЧЕНИКОВ -->
+    <section id="sectionIncubator" class="space-y-6 hidden animate-tab">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl border border-purple-100"><i class="fa-solid fa-lightbulb"></i></div>
+          <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Идеи и сайты учеников</h2>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Читайте полные тексты идей, изучайте созданные сайты школьников</p>
+          </div>
+        </div>
+        <button type="button" onclick="openPublishProjectModal()" class="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-2 shadow-md"><i class="fa-solid fa-plus"></i> Опубликовать идею/сайт</button>
+      </div>
+      <div id="incubatorGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- 5. НАСТРОЙКИ ПРОФИЛЯ -->
+    <section id="sectionProfile" class="space-y-6 hidden animate-tab">
+      <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 max-w-xl mx-auto space-y-6">
+        <div class="flex items-center gap-4 pb-6 border-b border-slate-100">
+          <div id="profileBigAvatar" class="w-20 h-20 rounded-2xl bg-indigo-600 text-white font-extrabold flex items-center justify-center text-3xl shadow-md overflow-hidden bg-cover bg-center">
+            U
+          </div>
+          <div>
+            <h2 class="text-xl font-extrabold text-slate-900">Настройки профиля</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Изменяйте личные данные и аватарку</p>
+          </div>
+        </div>
+
+        <form onsubmit="handleUpdateProfile(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">ФИО полностью</label>
+            <input type="text" id="profileFullName" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none">
+          </div>
+
+          <div id="profileClassBlock">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Класс</label>
+            <input type="text" id="profileClass" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Аватарка (загрузить фото)</label>
+            <div class="flex gap-2">
+              <input type="file" id="profileAvatarFile" accept="image/*" onchange="handleAvatarFileSelect(event)" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Email (нельзя изменить)</label>
+            <input type="email" id="profileEmail" disabled class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-500">
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition-all">Сохранить изменения</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 6. ПАНЕЛЬ УЧИТЕЛЯ -->
+    <section id="sectionAdmin" class="space-y-6 hidden animate-tab">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm">
+        <div>
+          <h2 class="text-xl font-extrabold text-slate-900">Панель Управления Учителя</h2>
+          <p class="text-xs text-slate-500 font-medium mt-0.5">Создание олимпиад с заданиями в любом формате, модерация идей и проверка ответов</p>
+        </div>
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <button type="button" onclick="openCreateContestModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-2 shadow-md"><i class="fa-solid fa-plus"></i> Создать олимпиаду / задачу</button>
+          <button type="button" onclick="exportCSVReport()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-2 shadow-md"><i class="fa-solid fa-file-excel"></i> Выгрузить в Excel (CSV)</button>
+        </div>
+      </div>
+
+      <!-- УПРАВЛЕНИЕ ОЛИМПИАДАМИ -->
+      <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-6 space-y-4">
+        <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2"><i class="fa-solid fa-trophy text-indigo-600"></i> Активные олимпиады и задания школы</h3>
+        <div id="adminContestsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+
+      <!-- МОДЕРАЦИЯ ИДЕЙ И САЙТОВ -->
+      <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-6 space-y-4">
+        <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2"><i class="fa-solid fa-shield-halved text-purple-600"></i> Модерация и управление идеями и сайтами учеников</h3>
+        <div id="adminModerationList" class="divide-y divide-slate-100"></div>
+      </div>
+
+      <div class="bg-amber-50/80 border border-amber-200/80 p-5 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg font-bold border border-amber-200"><i class="fa-solid fa-key"></i></div>
+          <div>
+            <div class="text-xs font-bold text-amber-900">Безопасность регистрации учителей</div>
+            <div class="text-[11px] text-amber-700/90 font-medium">Измените секретный PIN-код школы, запрашиваемый у учителей при регистрации</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <input type="text" id="changePinInput" placeholder="Новый PIN" class="px-3.5 py-2 border border-amber-300 rounded-xl text-xs bg-white outline-none">
+          <button type="button" onclick="updateSchoolPin()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all whitespace-nowrap shadow-sm">Обновить PIN</button>
+        </div>
+      </div>
+
+      <!-- ПРОВЕРКА ОТВЕТОВ УЧЕНИКОВ -->
+      <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="p-5 bg-slate-50/80 border-b border-slate-200/80 flex flex-col sm:flex-row gap-3 justify-between items-center">
+          <h3 class="font-bold text-slate-800 text-sm">Проверка ответов учеников</h3>
+          <div class="flex flex-wrap gap-2.5 w-full sm:w-auto">
+            <select id="adminContestFilter" onchange="renderAdminApplications()" class="border border-slate-300 rounded-xl text-xs p-2.5 outline-none bg-white font-semibold flex-1 sm:flex-none">
+              <option value="all">Все олимпиады</option>
+            </select>
+            <select id="adminStatusFilter" onchange="renderAdminApplications()" class="border border-slate-300 rounded-xl text-xs p-2.5 outline-none bg-white font-semibold flex-1 sm:flex-none">
+              <option value="all">Все статусы</option>
+              <option value="pending">На проверке</option>
+              <option value="winner_1">Победитель (1 место)</option>
+              <option value="winner_2">Призер (2 место)</option>
+              <option value="winner_3">Призер (3 место)</option>
+              <option value="participant">Участник</option>
+            </select>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-100/70 text-[10px] uppercase tracking-wider font-extrabold text-slate-400 border-b border-slate-200/80">
+                <th class="p-4">Ученик / Класс</th>
+                <th class="p-4">Олимпиада</th>
+                <th class="p-4">Ответ / Работа</th>
+                <th class="p-4">Статус проверки</th>
+                <th class="p-4">Баллы</th>
+                <th class="p-4 text-right">Управление</th>
+              </tr>
+            </thead>
+            <tbody id="adminApplicationsTable" class="divide-y divide-slate-100 text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- МОДАЛКА: ПРОСМОТР ПОЛНОЙ ИДЕИ ИЛИ САЙТА -->
+  <div id="viewProjectModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 sm:p-8 space-y-4">
+      <div class="flex justify-between items-center">
+        <span id="modalProjCategory" class="text-[10px] font-extrabold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-lg uppercase"></span>
+        <button type="button" onclick="closeViewProjectModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+      <h3 id="modalProjTitle" class="font-extrabold text-lg text-slate-900"></h3>
+      <div class="text-xs text-slate-400 font-medium">Автор: <span id="modalProjAuthor" class="text-slate-700 font-bold"></span></div>
+      
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs text-slate-700 leading-relaxed max-h-60 overflow-y-auto custom-scrollbar" id="modalProjFullDesc"></div>
+
+      <div id="modalProjLinkBlock" class="hidden pt-2">
+        <a id="modalProjLink" href="#" target="_blank" class="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-globe"></i> Перейти на сайт проекта</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: ВОССТАНОВЛЕНИЕ ПАРОЛЯ -->
+  <div id="forgotModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 text-center space-y-4">
+      <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 mx-auto flex items-center justify-center text-xl"><i class="fa-solid fa-paper-plane"></i></div>
+      <div>
+        <h3 class="font-extrabold text-base text-slate-900">Восстановление пароля</h3>
+        <p class="text-xs text-slate-500 mt-1">Новый временный пароль будет выведен на экран</p>
+      </div>
+      <div id="forgotAlert" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+      <form onsubmit="handleForgotPassword(event)" class="space-y-3">
+        <input type="email" id="forgotEmail" required placeholder="example@school.ru" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none">
+        <div class="flex gap-2">
+          <button type="button" onclick="closeForgotModal()" class="flex-1 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600">Отмена</button>
+          <button type="submit" id="forgotSubmitBtn" class="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-md">Отправить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: РЕШЕНИЕ ЗАДАЧИ И ОТПРАВКА ОТВЕТА -->
+  <div id="applyModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-100 max-h-[90vh] flex flex-col">
+      <div class="p-6 hero-gradient text-white flex justify-between items-center shrink-0">
+        <div>
+          <h3 id="modalContestHeaderTitle" class="font-extrabold text-base">Олимпиада / Решение задачи</h3>
+          <p class="text-[11px] text-indigo-200 font-medium mt-0.5">Внимательно ознакомьтесь с условием ниже</p>
+        </div>
+        <button type="button" onclick="closeApplyModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+
+      <div class="p-6 sm:p-8 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+        
+        <!-- БЛОК С УСЛОВИЕМ ЗАДАЧИ ОТ УЧИТЕЛЯ -->
+        <div class="bg-indigo-50/70 border border-indigo-200/80 p-4 rounded-2xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-indigo-900 flex items-center gap-1.5"><i class="fa-solid fa-file-lines text-indigo-600"></i> Текст задания и условие:</span>
+            <button type="button" onclick="generateStudentVariant()" class="text-[10px] font-bold text-indigo-600 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 shadow-sm hover:bg-indigo-600 hover:text-white transition-all"><i class="fa-solid fa-dice"></i> Получить свой вариант</button>
+          </div>
+          <div id="applyContestTaskText" class="text-xs text-slate-700 leading-relaxed font-medium bg-white p-3.5 rounded-xl border border-indigo-100">
+            Загрузка условия задачи...
+          </div>
+          <div id="applyContestAttachmentBlock" class="hidden pt-1">
+            <a id="applyContestFileLink" href="#" target="_blank" class="text-xs font-bold text-indigo-600 bg-indigo-100 hover:bg-indigo-200 p-2.5 rounded-xl block text-center transition-all"><i class="fa-solid fa-file-arrow-down"></i> Скачать файл с заданиями от учителя</a>
+          </div>
+        </div>
+
+        <form onsubmit="submitApplication(event)" class="space-y-4">
+          <input type="hidden" id="applyContestId">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">ФИО Ученика</label>
+              <input type="text" id="applyStudentName" readonly class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Класс</label>
+              <input type="text" id="applyStudentClass" readonly class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="setSubmissionType('file')" id="btnSubmissionTypeFile" class="py-2.5 px-2 border-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 border-indigo-600 bg-indigo-50/50 text-indigo-700"><i class="fa-solid fa-file-arrow-up text-base"></i> Файл с решением</button>
+            <button type="button" onclick="setSubmissionType('url')" id="btnSubmissionTypeUrl" class="py-2.5 px-2 border-2 border-slate-200 rounded-xl text-xs font-bold flex flex-col items-center gap-1 text-slate-600"><i class="fa-solid fa-link text-base"></i> Ссылка</button>
+            <button type="button" onclick="setSubmissionType('text')" id="btnSubmissionTypeText" class="py-2.5 px-2 border-2 border-slate-200 rounded-xl text-xs font-bold flex flex-col items-center gap-1 text-slate-600"><i class="fa-solid fa-pen-to-square text-base"></i> Текст ответа</button>
+          </div>
+
+          <div id="submissionFieldFile" class="space-y-2">
+            <div id="dropZone" onclick="document.getElementById('fileInput').click()" class="border-2 border-dashed border-indigo-300 hover:border-indigo-500 bg-indigo-50/30 p-6 rounded-2xl text-center cursor-pointer">
+              <input type="file" id="fileInput" onchange="handleFileSelect(event)" class="hidden" accept=".pdf,.doc,.docx,.zip,.rar,.txt,.jpg,.png">
+              <div id="dropZoneContent" class="space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 mx-auto flex items-center justify-center text-xl"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                <div class="text-xs font-bold text-slate-700">Нажмите для выбора файла с решением (до 15 МБ)</div>
+              </div>
+              <div id="filePreview" class="hidden flex items-center justify-between bg-white p-3 rounded-xl border border-indigo-200 shadow-sm">
+                <div class="text-left"><div id="fileName" class="text-xs font-bold text-slate-800 truncate max-w-[200px]"></div></div>
+                <button type="button" onclick="removeSelectedFile(event)" class="text-slate-400 hover:text-red-600"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <div id="submissionFieldUrl" class="space-y-1 hidden">
+            <input type="url" id="applyWorkUrl" placeholder="https://disk.yandex.ru/..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none">
+          </div>
+
+          <div id="submissionFieldText" class="space-y-1 hidden">
+            <textarea id="applyWorkText" rows="4" placeholder="Введите ваш окончательный ответ или ход решения..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none"></textarea>
+          </div>
+
+          <div>
+            <textarea id="applyComment" rows="2" placeholder="Комментарий учителю (необязательно)..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none"></textarea>
+          </div>
+
+          <div class="flex justify-end gap-2.5 pt-2">
+            <button type="button" onclick="closeApplyModal()" class="px-5 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600">Отмена</button>
+            <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-md">Сдать решение</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: ПУБЛИКАЦИЯ ИДЕИ ИЛИ САЙТА -->
+  <div id="publishProjectModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 sm:p-8 space-y-4">
+      <div class="flex justify-between items-center"><h3 class="font-extrabold text-base">Публикация идеи или сайта</h3><button type="button" onclick="closePublishProjectModal()"><i class="fa-solid fa-xmark"></i></button></div>
+      <form onsubmit="handlePublishProject(event)" class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Название идеи / сайта</label>
+          <input type="text" id="projTitle" required placeholder="Например: Эко-Монитор Школы" class="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Категория</label>
+            <input type="text" id="projCategory" required placeholder="Экология / IT" class="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ссылка на сайт (необязательно)</label>
+            <input type="url" id="projUrl" placeholder="https://mysite.ru" class="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Полный текст идеи / описание проекта</label>
+          <textarea id="projDesc" rows="5" required placeholder="Подробно опишите вашу идею, суть и пользу..." class="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs outline-none"></textarea>
+        </div>
+        <div class="bg-amber-50 p-3 rounded-xl text-[11px] text-amber-800 font-medium">
+          <i class="fa-solid fa-circle-info"></i> Идея будет опубликована на платформе после проверки учителем.
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs shadow-md">Отправить на модерацию учителю</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: СОЗДАНИЕ ИЛИ РЕДАКТИРОВАНИЕ ОЛИМПИАДЫ -->
+  <div id="createContestModal" class="fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 sm:p-8 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex justify-between items-center"><h3 id="contestModalTitle" class="font-extrabold text-base">Создание олимпиады / задачи</h3><button type="button" onclick="closeCreateContestModal()"><i class="fa-solid fa-xmark"></i></button></div>
+      <form onsubmit="handleSaveContest(event)" class="space-y-3.5">
+        <input type="hidden" id="editContestId">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Название олимпиады / конкурса</label>
+          <input type="text" id="newTitle" required placeholder="Например: Школьная олимпиада по математике" class="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Предмет / Категория</label>
+            <input type="text" id="newCategory" required placeholder="Математика" class="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Срок сдачи (дедлайн)</label>
+            <input type="date" id="newDeadline" required class="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Формат выдачи задания ученикам</label>
+          <div class="grid grid-cols-3 gap-2 mb-2">
+            <button type="button" onclick="setContestTaskFormat('text')" id="btnFormatText" class="py-2 px-2 border-2 rounded-xl text-xs font-bold border-indigo-600 bg-indigo-50/50 text-indigo-700">Текст задач</button>
+            <button type="button" onclick="setContestTaskFormat('file')" id="btnFormatFile" class="py-2 px-2 border-2 border-slate-200 rounded-xl text-xs font-bold text-slate-600">Файл (PDF/Doc)</button>
+            <button type="button" onclick="setContestTaskFormat('url')" id="btnFormatUrl" class="py-2 px-2 border-2 border-slate-200 rounded-xl text-xs font-bold text-slate-600">Внешняя ссылка</button>
+          </div>
+        </div>
+
+        <div id="taskFormatFieldText" class="space-y-1">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Текст условия задач</label>
+          <textarea id="newDescription" rows="4" placeholder="Введите текст задач или вопросов..." class="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs outline-none font-mono"></textarea>
+        </div>
+
+        <div id="taskFormatFieldFile" class="space-y-1 hidden">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Прикрепить файл с заданием</label>
+          <input type="file" id="contestTaskFileInput" onchange="handleContestFileSelect(event)" class="w-full px-3.5 py-2 bg-slate-50 border rounded-xl text-xs">
+          <div id="contestTaskFileName" class="text-[11px] text-indigo-600 font-bold mt-1"></div>
+        </div>
+
+        <div id="taskFormatFieldUrl" class="space-y-1 hidden">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Ссылка на задания (Яндекс.Формы / Степик / Диск)</label>
+          <input type="url" id="newExternalUrl" placeholder="https://forms.yandex.ru/..." class="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs outline-none">
+        </div>
+
+        <button type="submit" id="contestSubmitBtn" class="w-full py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-xs shadow-md mt-2">Опубликовать олимпиаду</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Холст для генерации верифицируемых дипломов и портфолио -->
+  <canvas id="diplomaCanvas" width="1000" height="700" class="hidden"></canvas>
+
+  <script>
+    const DEFAULT_SCHOOL_PIN = "TEACHER2026";
+    const INITIAL_CONTESTS = [
+      { 
+        id: "c1", 
+        title: "Школьная олимпиада по математике (7–8 классы)", 
+        category: "Математика", 
+        deadline: "2026-11-20", 
+        status: "active", 
+        taskFormat: "text",
+        description: "1. Найдите значение выражения: (15/4 - 2.5) * 8 / 3.\n2. В треугольнике ABC угол C равен 90 градусов, угол A равен 30 градусов, гипотенуза AB = 24 см. Найдите катет BC.\n3. Решите уравнение: 3x - 5(2x - 1) = 4(3 - x)." 
+      },
+      { 
+        id: "c2", 
+        title: "Конкурс по литературе «Живое Слово»", 
+        category: "Литература", 
+        deadline: "2026-10-30", 
+        status: "active", 
+        taskFormat: "text",
+        description: "Напишите развернутый ответ на вопрос: «Какую роль играл суд в повести Шемякин суд и чему нас учит это произведение?» (объем от 150 слов)." 
+      }
+    ];
+
+    const INITIAL_PROJECTS = [
+      { id: "p1", title: "Эко-Монитор Школы", category: "Экология", author: "Алексей Смирнов", authorId: "u_demo1", description: "Автоматизированная система датчиков качества воздуха в классах.", siteUrl: "https://example.com", status: "approved" },
+      { id: "p2", title: "Гид по Истории Татарстана", category: "История", author: "Динара Каримова", authorId: "u_demo2", description: "Интерактивный веб-сайт с историческими картами Казани и виртуальными экскурсиями по памятникам архитектуры.", siteUrl: "https://example.com", status: "approved" }
+    ];
+
+    function initStorage() {
+      if (!localStorage.getItem('users')) localStorage.setItem('users', JSON.stringify([]));
+      if (!localStorage.getItem('contests')) localStorage.setItem('contests', JSON.stringify(INITIAL_CONTESTS));
+      if (!localStorage.getItem('incubatorProjects')) localStorage.setItem('incubatorProjects', JSON.stringify(INITIAL_PROJECTS));
+      if (!localStorage.getItem('applications')) localStorage.setItem('applications', JSON.stringify([]));
+      if (!localStorage.getItem('notifications')) localStorage.setItem('notifications', JSON.stringify([]));
+      if (!localStorage.getItem('school_pin')) localStorage.setItem('school_pin', DEFAULT_SCHOOL_PIN);
+    }
+    initStorage();
+
+    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+    let activeSubmissionType = 'file';
+    let selectedFileData = null;
+    let activeContestTaskFormat = 'text';
+    let contestTaskFileData = null;
+    let newAvatarDataUrl = null;
+
+    // Режим работы Доски Почёта ('all' или 'class')
+    let currentLeaderboardMode = 'all';
+
+    function isValidClass(cls) { return /^(1[0-1]|[1-9])\s*["']?[А-На-нA-Na-n]["']?$/.test(cls.trim()); }
+    function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()); }
+
+    function showAlert(msg, type = 'error') {
+      const el = document.getElementById('authAlert');
+      el.className = `mb-4 p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2.5 ${type === 'error' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`;
+      el.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${msg}`;
+      el.classList.remove('hidden');
+    }
+
+    function switchAuthTab(tab) {
+      document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+      document.getElementById('tabLoginBtn').className = tab === 'login' ? "flex-1 py-2.5 text-xs font-bold rounded-xl text-indigo-600 bg-white shadow-sm" : "flex-1 py-2.5 text-xs font-bold rounded-xl text-slate-500";
+      document.getElementById('tabRegisterBtn').className = tab === 'register' ? "flex-1 py-2.5 text-xs font-bold rounded-xl text-indigo-600 bg-white shadow-sm" : "flex-1 py-2.5 text-xs font-bold rounded-xl text-slate-500";
+    }
+
+    function toggleRoleFields(role) {
+      document.getElementById('classFieldBlock').classList.toggle('hidden', role !== 'student');
+      document.getElementById('teacherPinBlock').classList.toggle('hidden', role !== 'teacher');
+      
+      const studentLabel = document.getElementById('roleStudentLabel');
+      const teacherLabel = document.getElementById('roleTeacherLabel');
+      if (role === 'student') {
+        studentLabel.className = "border-2 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer transition-all border-indigo-600 bg-indigo-50/50";
+        teacherLabel.className = "border-2 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer transition-all border-slate-200";
+      } else {
+        teacherLabel.className = "border-2 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer transition-all border-indigo-600 bg-indigo-50/50";
+        studentLabel.className = "border-2 rounded-xl p-2.5 flex items-center gap-2 cursor-pointer transition-all border-slate-200";
+      }
+    }
+
+    function openForgotModal() {
+      document.getElementById('forgotEmail').value = '';
+      document.getElementById('forgotAlert').classList.add('hidden');
+      document.getElementById('forgotModal').classList.remove('hidden');
+    }
+    function closeForgotModal() { document.getElementById('forgotModal').classList.add('hidden'); }
+
+    async function handleForgotPassword(e) {
+      e.preventDefault();
+      const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const user = users.find(u => u.email.toLowerCase() === email);
+      const alertEl = document.getElementById('forgotAlert');
+
+      alertEl.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'bg-emerald-50', 'text-emerald-700');
+      if (!user) {
+        alertEl.classList.add('bg-red-50', 'text-red-700');
+        alertEl.textContent = 'Пользователь не найден!';
+        return;
+      }
+
+      const tempPass = Math.random().toString(36).slice(-8);
+      user.password = tempPass;
+      localStorage.setItem('users', JSON.stringify(users));
+
+      alertEl.classList.add('bg-emerald-50', 'text-emerald-700');
+      alertEl.innerHTML = `Временный пароль для <b>${email}</b>:<br><b>${tempPass}</b>`;
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassword').value;
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const found = users.find(u => u.email.toLowerCase() === email && u.password === password);
+
+      if (!found) { showAlert('Неверный Email или пароль!'); return; }
+      currentUser = found;
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      document.getElementById('authModal').classList.add('hidden');
+      updateUIForCurrentRole();
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const role = document.querySelector('input[name="regRole"]:checked').value;
+      const fullName = document.getElementById('regFullName').value.trim();
+      const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      const password = document.getElementById('regPassword').value;
+
+      if (fullName.split(/\s+/).length < 2) { showAlert('Введите Фамилию и Имя!'); return; }
+      if (!isValidEmail(email)) { showAlert('Некорректный Email!'); return; }
+
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      if (users.some(u => u.email.toLowerCase() === email)) { showAlert('Email уже занят!'); return; }
+
+      let userClass = '';
+      if (role === 'student') {
+        userClass = document.getElementById('regClass').value.trim().toUpperCase();
+        if (!isValidClass(userClass)) { showAlert('Неверный класс (например: 8Б)'); return; }
+      } else {
+        const pinInput = document.getElementById('regTeacherPin').value.trim();
+        const savedPin = localStorage.getItem('school_pin') || DEFAULT_SCHOOL_PIN;
+        if (pinInput !== savedPin && pinInput !== DEFAULT_SCHOOL_PIN) {
+          showAlert('Неверный PIN-код учителя!'); return;
+        }
+      }
+
+      const newUser = { id: 'u_' + Date.now(), fullName, email, password, role, userClass: role === 'student' ? userClass : 'Преподаватель', avatar: null };
+      users.push(newUser);
+      localStorage.setItem('users', JSON.stringify(users));
+
+      currentUser = newUser;
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      document.getElementById('authModal').classList.add('hidden');
+      updateUIForCurrentRole();
+    }
+
+    function confirmLogout() {
+      document.getElementById('confirmLogoutModal').classList.remove('hidden');
+    }
+
+    function closeLogoutConfirm() {
+      document.getElementById('confirmLogoutModal').classList.add('hidden');
+    }
+
+    function executeLogout() {
+      closeLogoutConfirm();
+      currentUser = null;
+      localStorage.removeItem('currentUser');
+      
+      document.getElementById('loginEmail').value = '';
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('regFullName').value = '';
+      document.getElementById('regEmail').value = '';
+      document.getElementById('regPassword').value = '';
+      document.getElementById('regClass').value = '';
+      document.getElementById('regTeacherPin').value = '';
+      document.getElementById('authAlert').classList.add('hidden');
+
+      document.getElementById('authModal').classList.remove('hidden');
+    }
+
+    function updateUIForCurrentRole() {
+      if (!currentUser) return;
+      document.getElementById('headerUserName').textContent = currentUser.fullName;
+      document.getElementById('headerUserRole').textContent = currentUser.role === 'teacher' ? 'Учитель' : `Ученик ${currentUser.userClass}`;
+      
+      const avatarEl = document.getElementById('headerUserAvatar');
+      if (currentUser.avatar) {
+        avatarEl.textContent = '';
+        avatarEl.style.backgroundImage = `url('${currentUser.avatar}')`;
+      } else {
+        avatarEl.style.backgroundImage = 'none';
+        avatarEl.textContent = currentUser.fullName.charAt(0);
+      }
+
+      document.getElementById('navAdminBtn').classList.toggle('hidden', currentUser.role !== 'teacher');
+      document.getElementById('navDashboardBtn').classList.toggle('hidden', currentUser.role === 'teacher');
+      document.getElementById('notificationContainer').classList.toggle('hidden', currentUser.role === 'teacher');
+      
+      if (currentUser.role === 'student') {
+        renderNotifications();
+        switchTab('catalog');
+      } else {
+        switchTab('admin');
+      }
+    }
+
+    function switchTab(tab) {
+      if (tab === 'admin' && currentUser?.role !== 'teacher') return;
+      
+      const sections = ['sectionCatalog', 'sectionDashboard', 'sectionLeaderboard', 'sectionIncubator', 'sectionProfile', 'sectionAdmin'];
+      sections.forEach(s => {
+        const el = document.getElementById(s);
+        if (el) el.classList.add('hidden');
+      });
+
+      const navBtns = {
+        'catalog': 'navCatalogBtn',
+        'dashboard': 'navDashboardBtn',
+        'leaderboard': 'navLeaderboardBtn',
+        'incubator': 'navIncubatorBtn',
+        'admin': 'navAdminBtn'
+      };
+
+      Object.keys(navBtns).forEach(k => {
+        const btn = document.getElementById(navBtns[k]);
+        if (btn) btn.className = "px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 transition-all flex items-center gap-2";
+      });
+
+      const profileBtn = document.getElementById('navProfileBtn');
+      if (profileBtn) profileBtn.className = tab === 'profile' ? "flex items-center gap-2.5 p-1.5 pr-3 bg-indigo-50 border border-indigo-200 rounded-2xl transition-all" : "flex items-center gap-2.5 p-1.5 pr-3 bg-slate-100 hover:bg-slate-200/80 rounded-2xl transition-all border border-slate-200/60";
+
+      const activeSection = document.getElementById(`section${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+      if (activeSection) activeSection.classList.remove('hidden');
+
+      const activeBtn = document.getElementById(navBtns[tab]);
+      if (activeBtn) activeBtn.className = "px-4 py-2 rounded-xl text-indigo-600 bg-white shadow-sm transition-all flex items-center gap-2 font-bold";
+
+      if (tab === 'catalog') renderCatalog();
+      if (tab === 'dashboard') { renderMyApplications(); renderMyProjects(); }
+      if (tab === 'leaderboard') renderLeaderboard();
+      if (tab === 'incubator') renderIncubator();
+      if (tab === 'profile') initProfileForm();
+      if (tab === 'admin') {
+        if (currentUser?.role !== 'teacher') { switchTab('catalog'); return; }
+        updateAdminContestsDropdown();
+        renderAdminContestsList();
+        renderAdminApplications();
+        renderAdminModeration();
+      }
+    }
+
+    function initProfileForm() {
+      if (!currentUser) return;
+      document.getElementById('profileFullName').value = currentUser.fullName;
+      document.getElementById('profileClass').value = currentUser.userClass;
+      document.getElementById('profileEmail').value = currentUser.email;
+      document.getElementById('profileClassBlock').classList.toggle('hidden', currentUser.role !== 'student');
+      
+      const bigAvatar = document.getElementById('profileBigAvatar');
+      if (currentUser.avatar) {
+        bigAvatar.textContent = '';
+        bigAvatar.style.backgroundImage = `url('${currentUser.avatar}')`;
+      } else {
+        bigAvatar.style.backgroundImage = 'none';
+        bigAvatar.textContent = currentUser.fullName.charAt(0);
+      }
+      newAvatarDataUrl = currentUser.avatar || null;
+    }
+
+    function handleAvatarFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          newAvatarDataUrl = ev.target.result;
+          const bigAvatar = document.getElementById('profileBigAvatar');
+          bigAvatar.textContent = '';
+          bigAvatar.style.backgroundImage = `url('${newAvatarDataUrl}')`;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleUpdateProfile(e) {
+      e.preventDefault();
+      currentUser.fullName = document.getElementById('profileFullName').value.trim();
+      if (currentUser.role === 'student') {
+        currentUser.userClass = document.getElementById('profileClass').value.trim().toUpperCase();
+      }
+      currentUser.avatar = newAvatarDataUrl;
+
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const idx = users.findIndex(u => u.id === currentUser.id);
+      if (idx !== -1) {
+        users[idx] = currentUser;
+        localStorage.setItem('users', JSON.stringify(users));
+      }
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      updateUIForCurrentRole();
+      alert('Профиль успешно обновлен!');
+    }
+
+    function addNotification(studentId, text) {
+      const notifs = JSON.parse(localStorage.getItem('notifications')) || [];
+      notifs.push({ id: 'n_' + Date.now(), studentId, text, read: false, date: new Date().toLocaleDateString('ru-RU') });
+      localStorage.setItem('notifications', JSON.stringify(notifs));
+    }
+
+    function renderNotifications() {
+      if (!currentUser || currentUser.role === 'teacher') return;
+      const notifs = (JSON.parse(localStorage.getItem('notifications')) || []).filter(n => n.studentId === currentUser.id);
+      const unreadCount = notifs.filter(n => !n.read).length;
+      
+      const badge = document.getElementById('notifBadge');
+      if (unreadCount > 0) {
+        badge.textContent = unreadCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      const list = document.getElementById('notifList');
+      list.innerHTML = notifs.length === 0 ? `<div class="text-center text-slate-400 text-xs py-4">Нет уведомлений</div>` : '';
+      notifs.reverse().forEach(n => {
+        list.innerHTML += `<div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-100 text-[11px]"><div class="font-bold text-slate-800">${n.text}</div><div class="text-[9px] text-slate-400 mt-1">${n.date}</div></div>`;
+      });
+    }
+
+    function toggleNotifications() {
+      const drop = document.getElementById('notifDropdown');
+      drop.classList.toggle('hidden');
+      if (!drop.classList.contains('hidden') && currentUser) {
+        const notifs = JSON.parse(localStorage.getItem('notifications')) || [];
+        notifs.forEach(n => { if (n.studentId === currentUser.id) n.read = true; });
+        localStorage.setItem('notifications', JSON.stringify(notifs));
+        document.getElementById('notifBadge').classList.add('hidden');
+      }
+    }
+
+    function clearNotifications() {
+      let notifs = JSON.parse(localStorage.getItem('notifications')) || [];
+      notifs = notifs.filter(n => n.studentId !== currentUser.id);
+      localStorage.setItem('notifications', JSON.stringify(notifs));
+      renderNotifications();
+    }
+
+    // Управление режимами Доски почёта
+    function setLeaderboardMode(mode) {
+      currentLeaderboardMode = mode;
+      const btnAll = document.getElementById('leaderboardTabAll');
+      const btnClass = document.getElementById('leaderboardTabClass');
+      const select = document.getElementById('leaderboardClassSelect');
+
+      if (mode === 'all') {
+        btnAll.className = "px-4 py-2 rounded-xl text-xs font-bold text-indigo-600 bg-white shadow-sm transition-all flex items-center gap-1.5";
+        btnClass.className = "px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5";
+        select.classList.add('hidden');
+      } else {
+        btnClass.className = "px-4 py-2 rounded-xl text-xs font-bold text-indigo-600 bg-white shadow-sm transition-all flex items-center gap-1.5";
+        btnAll.className = "px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5";
+        select.classList.remove('hidden');
+      }
+
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const applications = JSON.parse(localStorage.getItem('applications')) || [];
+      const students = users.filter(u => u.role === 'student');
+
+      let stats = students.map(st => {
+        const myApps = applications.filter(a => a.studentId === st.id);
+        const score = myApps.reduce((sum, a) => sum + (a.score || 0), 0);
+        const awards = myApps.filter(a => ['winner_1', 'winner_2', 'winner_3'].includes(a.status)).length;
+        
+        // Извлекаем цифру класса (например, из "8Б" получаем 8)
+        const match = (st.userClass || '').match(/\d+/);
+        const classNum = match ? parseInt(match[0]) : null;
+
+        return { fullName: st.fullName, userClass: st.userClass, classNum, score, awards };
+      });
+
+      // Фильтрация по параллели, если выбран режим "По классам"
+      if (currentLeaderboardMode === 'class') {
+        const selectedClassNum = parseInt(document.getElementById('leaderboardClassSelect').value);
+        stats = stats.filter(st => st.classNum === selectedClassNum);
+      }
+
+      stats.sort((a, b) => b.score - a.score);
+
+      const tbody = document.getElementById('leaderboardTable');
+      tbody.innerHTML = '';
+
+      if (stats.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">В этой категории учеников пока нет</td></tr>`;
+        return;
+      }
+
+      stats.forEach((st, idx) => {
+        let rankBadge = `<span class="font-extrabold text-slate-600">${idx + 1}</span>`;
+        if (idx === 0) rankBadge = `<span class="w-7 h-7 rounded-full bg-amber-100 text-amber-700 inline-flex items-center justify-center font-black">🥇</span>`;
+        else if (idx === 1) rankBadge = `<span class="w-7 h-7 rounded-full bg-slate-200 text-slate-700 inline-flex items-center justify-center font-black">🥈</span>`;
+        else if (idx === 2) rankBadge = `<span class="w-7 h-7 rounded-full bg-orange-100 text-orange-800 inline-flex items-center justify-center font-black">🥉</span>`;
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-50 transition-all">
+            <td class="p-4 text-center">${rankBadge}</td>
+            <td class="p-4 font-extrabold text-slate-900">${st.fullName}</td>
+            <td class="p-4 text-slate-500">${st.userClass}</td>
+            <td class="p-4 text-center font-bold text-amber-600">${st.awards}</td>
+            <td class="p-4 text-right font-black text-indigo-600 text-sm">${st.score} б.</td>
+          </tr>
+        `;
+      });
+    }
+
+    function renderIncubator() {
+      const projects = (JSON.parse(localStorage.getItem('incubatorProjects')) || []).filter(p => p.status === 'approved');
+      const grid = document.getElementById('incubatorGrid');
+      grid.innerHTML = '';
+
+      if (projects.length === 0) {
+        grid.innerHTML = `<div class="col-span-3 text-center text-slate-400 py-12 text-xs">Пока нет одобренных идей и сайтов</div>`;
+        return;
+      }
+
+      projects.reverse().forEach(proj => {
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between cursor-pointer";
+        card.onclick = () => openViewProjectModal(proj.id);
+        card.innerHTML = `
+          <div>
+            <span class="text-[10px] font-extrabold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-lg uppercase">${proj.category}</span>
+            <h3 class="font-extrabold text-slate-900 text-base mt-2 mb-1">${proj.title}</h3>
+            <div class="text-[11px] text-slate-400 mb-3 font-medium">Автор: ${proj.author}</div>
+            <p class="text-xs text-slate-500 mb-6 line-clamp-3">${proj.description}</p>
+          </div>
+          <div class="flex items-center justify-between pt-4 border-t border-slate-100 text-xs font-bold text-indigo-600">
+            <span>Читать полностью →</span>
+            ${proj.siteUrl ? '<span class="text-emerald-600"><i class="fa-solid fa-globe"></i> Есть сайт</span>' : ''}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function renderMyProjects() {
+      if (!currentUser || currentUser.role !== 'student') return;
+      const projects = (JSON.parse(localStorage.getItem('incubatorProjects')) || []).filter(p => p.authorId === currentUser.id);
+      const container = document.getElementById('myProjectsList');
+      container.innerHTML = '';
+
+      if (projects.length === 0) {
+        container.innerHTML = `<div class="text-slate-400 text-xs py-4 text-center">Вы еще не публиковали идеи или сайты</div>`;
+        return;
+      }
+
+      projects.reverse().forEach(proj => {
+        let statusBadge = `<span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 font-bold rounded-lg text-[10px]">⌛ На модерации учителем</span>`;
+        if (proj.status === 'approved') {
+          statusBadge = `<span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold rounded-lg text-[10px]">✅ Опубликовано в каталоге</span>`;
+        } else if (proj.status === 'rejected') {
+          statusBadge = `<span class="px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 font-bold rounded-lg text-[10px]">❌ Отклонено учителем</span>`;
+        }
+
+        container.innerHTML += `
+          <div class="py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-extrabold text-sm text-slate-900">${proj.title}</span>
+                <span class="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded font-bold">${proj.category}</span>
+              </div>
+              <p class="text-xs text-slate-500 line-clamp-2 max-w-xl">${proj.description}</p>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              ${statusBadge}
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function openPublishProjectModal() { document.getElementById('publishProjectModal').classList.remove('hidden'); }
+    function closePublishProjectModal() { document.getElementById('publishProjectModal').classList.add('hidden'); }
+
+    function handlePublishProject(e) {
+      e.preventDefault();
+      const projects = JSON.parse(localStorage.getItem('incubatorProjects')) || [];
+      projects.push({
+        id: 'p_' + Date.now(),
+        title: document.getElementById('projTitle').value,
+        category: document.getElementById('projCategory').value,
+        author: currentUser.fullName,
+        authorId: currentUser.id,
+        description: document.getElementById('projDesc').value,
+        siteUrl: document.getElementById('projUrl').value,
+        status: 'pending'
+      });
+      localStorage.setItem('incubatorProjects', JSON.stringify(projects));
+      closePublishProjectModal();
+      alert('Идея отправлена учителю на модерацию!');
+      renderMyProjects();
+    }
+
+    function openViewProjectModal(id) {
+      const projects = JSON.parse(localStorage.getItem('incubatorProjects')) || [];
+      const proj = projects.find(p => p.id === id);
+      if (!proj) return;
+
+      document.getElementById('modalProjCategory').textContent = proj.category;
+      document.getElementById('modalProjTitle').textContent = proj.title;
+      document.getElementById('modalProjAuthor').textContent = proj.author;
+      document.getElementById('modalProjFullDesc').textContent = proj.description;
+
+      const linkBlock = document.getElementById('modalProjLinkBlock');
+      if (proj.siteUrl) {
+        document.getElementById('modalProjLink').href = proj.siteUrl;
+        linkBlock.classList.remove('hidden');
+      } else {
+        linkBlock.classList.add('hidden');
+      }
+
+      document.getElementById('viewProjectModal').classList.remove('hidden');
+    }
+    function closeViewProjectModal() { document.getElementById('viewProjectModal').classList.add('hidden'); }
+
+    function renderAdminModeration() {
+      const projects = JSON.parse(localStorage.getItem('incubatorProjects')) || [];
+      const container = document.getElementById('adminModerationList');
+      container.innerHTML = '';
+
+      if (projects.length === 0) {
+        container.innerHTML = `<div class="text-slate-400 text-xs py-4 text-center">Нет идей и сайтов</div>`;
+        return;
+      }
+
+      projects.reverse().forEach(proj => {
+        let statusBadge = `<span class="text-amber-600 font-bold">На модерации</span>`;
+        if (proj.status === 'approved') statusBadge = `<span class="text-emerald-600 font-bold">Опубликовано</span>`;
+        else if (proj.status === 'rejected') statusBadge = `<span class="text-red-600 font-bold">Отклонено</span>`;
+
+        container.innerHTML += `
+          <div class="py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-extrabold text-sm text-slate-900">${proj.title}</span>
+                <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded">${proj.category}</span>
+                <span class="text-[11px]">${statusBadge}</span>
+              </div>
+              <div class="text-xs text-slate-500 mt-1">Автор: <b>${proj.author}</b> | Сайт: ${proj.siteUrl ? `<a href="${proj.siteUrl}" target="_blank" class="text-indigo-600 underline">ссылка</a>` : 'нет'}</div>
+              <p class="text-xs text-slate-600 mt-2 bg-slate-50 p-3 rounded-xl border border-slate-100">${proj.description}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" onclick="moderateProject('${proj.id}', 'approved')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all">Принять</button>
+              <button type="button" onclick="moderateProject('${proj.id}', 'rejected')" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs transition-all">Отклонить</button>
+              <button type="button" onclick="deleteProject('${proj.id}')" class="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition-all" title="Удалить"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function moderateProject(id, status) {
+      const projects = JSON.parse(localStorage.getItem('incubatorProjects')) || [];
+      const proj = projects.find(p => p.id === id);
+      if (proj) {
+        proj.status = status;
+        localStorage.setItem('incubatorProjects', JSON.stringify(projects));
+        renderAdminModeration();
+        addNotification(proj.authorId, `Статус вашей идеи «${proj.title}» изменен: ${status === 'approved' ? 'Принята и опубликована!' : 'Отклонена учителем'}`);
+      }
+    }
+
+    function deleteProject(id) {
+      if (!confirm('Вы действительно хотите удалить эту идею/сайт?')) return;
+      let projects = JSON.parse(localStorage.getItem('incubatorProjects')) || [];
+      projects = projects.filter(p => p.id !== id);
+      localStorage.setItem('incubatorProjects', JSON.stringify(projects));
+      renderAdminModeration();
+    }
+
+    function setContestTaskFormat(format) {
+      activeContestTaskFormat = format;
+      ['Text', 'File', 'Url'].forEach(f => {
+        const btn = document.getElementById(`btnFormat${f}`);
+        const field = document.getElementById(`taskFormatField${f}`);
+        const isMatch = f.toLowerCase() === format;
+        if (btn) btn.className = `py-2 px-2 border-2 rounded-xl text-xs font-bold ${isMatch ? 'border-indigo-600 bg-indigo-50/50 text-indigo-700' : 'border-slate-200 text-slate-600'}`;
+        if (field) field.classList.toggle('hidden', !isMatch);
+      });
+    }
+
+    function handleContestFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          contestTaskFileData = { name: file.name, dataUrl: ev.target.result };
+          document.getElementById('contestTaskFileName').textContent = `Прикреплен файл: ${file.name}`;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function renderAdminContestsList() {
+      const contests = JSON.parse(localStorage.getItem('contests')) || [];
+      const container = document.getElementById('adminContestsList');
+      container.innerHTML = '';
+
+      if (contests.length === 0) {
+        container.innerHTML = `<div class="text-slate-400 text-xs py-4 col-span-2 text-center">Нет активных олимпиад</div>`;
+        return;
+      }
+
+      contests.forEach(contest => {
+        let taskInfo = `<p class="text-xs text-slate-500 mt-1 line-clamp-2 whitespace-pre-line">${contest.description || ''}</p>`;
+        if (contest.taskFormat === 'file' && contest.taskFile) {
+          taskInfo = `<div class="text-xs text-indigo-600 font-bold mt-1"><i class="fa-solid fa-file"></i> Файл задания: ${contest.taskFile.name}</div>`;
+        } else if (contest.taskFormat === 'url' && contest.externalUrl) {
+          taskInfo = `<div class="text-xs text-indigo-600 font-bold mt-1"><i class="fa-solid fa-globe"></i> Ссылка: <a href="${contest.externalUrl}" target="_blank" class="underline">${contest.externalUrl}</a></div>`;
+        }
+
+        container.innerHTML += `
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col justify-between gap-3">
+            <div>
+              <div class="flex justify-between items-start">
+                <span class="text-[10px] font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">${contest.category}</span>
+                <span class="text-[11px] text-slate-400">Дедлайн: ${contest.deadline}</span>
+              </div>
+              <h4 class="font-bold text-sm text-slate-900 mt-1.5">${contest.title}</h4>
+              ${taskInfo}
+            </div>
+            <div class="flex items-center gap-2 pt-2 border-t border-slate-200/60 justify-between">
+              <button type="button" onclick="filterAdminByContest('${contest.id}')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition-all"><i class="fa-solid fa-filter"></i> Проверить ответы</button>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="openEditContestModal('${contest.id}')" class="p-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs" title="Изменить"><i class="fa-solid fa-pen"></i></button>
+                <button type="button" onclick="deleteContest('${contest.id}')" class="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs" title="Удалить"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function updateAdminContestsDropdown() {
+      const contests = JSON.parse(localStorage.getItem('contests')) || [];
+      const select = document.getElementById('adminContestFilter');
+      const currentVal = select.value;
+      select.innerHTML = `<option value="all">Все олимпиады (${contests.length})</option>`;
+      contests.forEach(c => {
+        select.innerHTML += `<option value="${c.id}">${c.title}</option>`;
+      });
+      select.value = currentVal;
+    }
+
+    function openCreateContestModal() {
+      document.getElementById('contestModalTitle').textContent = 'Создание олимпиады / задачи';
+      document.getElementById('contestSubmitBtn').textContent = 'Опубликовать олимпиаду';
+      document.getElementById('editContestId').value = '';
+      document.getElementById('newTitle').value = '';
+      document.getElementById('newCategory').value = '';
+      document.getElementById('newDeadline').value = '';
+      document.getElementById('newDescription').value = '';
+      document.getElementById('newExternalUrl').value = '';
+      contestTaskFileData = null;
+      document.getElementById('contestTaskFileName').textContent = '';
+      setContestTaskFormat('text');
+      document.getElementById('createContestModal').classList.remove('hidden');
+    }
+
+    function openEditContestModal(id) {
+      const contests = JSON.parse(localStorage.getItem('contests')) || [];
+      const c = contests.find(x => x.id === id);
+      if (!c) return;
+
+      document.getElementById('contestModalTitle').textContent = 'Редактирование олимпиады';
+      document.getElementById('contestSubmitBtn').textContent = 'Сохранить изменения';
+      document.getElementById('editContestId').value = c.id;
+      document.getElementById('newTitle').value = c.title;
+      document.getElementById('newCategory').value = c.category;
+      document.getElementById('newDeadline').value = c.deadline;
+      document.getElementById('newDescription').value = c.description || '';
+      document.getElementById('newExternalUrl').value = c.externalUrl || '';
+      
+      contestTaskFileData = c.taskFile || null;
+      document.getElementById('contestTaskFileName').textContent = contestTaskFileData ? `Файл: ${contestTaskFileData.name}` : '';
+
+      setContestTaskFormat(c.taskFormat || 'text');
+      document.getElementById('createContestModal').classList.remove('hidden');
+    }
+
+    function closeCreateContestModal() { document.getElementById('createContestModal').classList.add('hidden'); }
+
+    function handleSaveContest(e) {
+      e.preventDefault();
+      const contests = JSON.parse(localStorage.getItem('contests')) || [];
+      const editId = document.getElementById('editContestId').value;
+      const title = document.getElementById('newTitle').value;
+      const category = document.getElementById('newCategory').value;
+      const deadline = document.getElementById('newDeadline').value;
+      const description = document.getElementById('newDescription').value;
+      const externalUrl = document.getElementById('newExternalUrl').value;
+
+      if (editId) {
+        const c = contests.find(x => x.id === editId);
+        if (c) {
+          c.title = title;
+          c.category = category;
+          c.deadline = deadline;
+          c.taskFormat = activeContestTaskFormat;
+          c.description = description;
+          c.taskFile = contestTaskFileData;
+          c.externalUrl = externalUrl;
+        }
+      } else {
+        contests.unshift({
+          id: 'c_' + Date.now(),
+          title,
+          category,
+          deadline,
+          status: 'active',
+          taskFormat: activeContestTaskFormat,
+          description,
+          taskFile: contestTaskFileData,
+          externalUrl
+        });
+      }
+
+      localStorage.setItem('contests', JSON.stringify(contests));
+      closeCreateContestModal();
+      renderCatalog();
+      renderAdminContestsList();
+      updateAdminContestsDropdown();
+    }
+
+    function deleteContest(id) {
+      if (!confirm('Вы уверены, что хотите удалить эту олимпиаду?')) return;
+      let contests = JSON.parse(localStorage.getItem('contests')) || [];
+      contests = contests.filter(c => c.id !== id);
+      localStorage.setItem('contests', JSON.stringify(contests));
+      renderCatalog();
+      renderAdminContestsList();
+      updateAdminContestsDropdown();
+      renderAdminApplications();
+    }
+
+    function filterAdminByContest(id) {
+      switchTab('admin');
+      document.getElementById('adminContestFilter').value = id;
+      renderAdminApplications();
+    }
+
+    function renderCatalog() {
+      const contests = JSON.parse(localStorage.getItem('contests')) || [];
+      const applications = JSON.parse(localStorage.getItem('applications')) || [];
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const grid = document.getElementById('catalogGrid');
+      grid.innerHTML = '';
+
+      contests.filter(c => c.title.toLowerCase().includes(search)).forEach(contest => {
+        const hasApplied = applications.some(a => a.contestId === contest.id && a.studentId === currentUser?.id);
+        
+        let taskPreview = `<div class="text-xs text-slate-600 mb-4 bg-slate-50 p-3 rounded-2xl border border-slate-100 whitespace-pre-line max-h-32 overflow-y-auto custom-scrollbar font-mono">${contest.description || 'Задание в прикрепленном файле или по ссылке'}</div>`;
+        if (contest.taskFormat === 'file' && contest.taskFile) {
+          taskPreview = `<div class="mb-4"><a href="${contest.taskFile.dataUrl}" download="${contest.taskFile.name}" class="text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 p-3 rounded-2xl block text-center border border-indigo-200 transition-all"><i class="fa-solid fa-file-arrow-down"></i> Скачать файл с заданием (${contest.taskFile.name})</a></div>`;
+        } else if (contest.taskFormat === 'url' && contest.externalUrl) {
+          taskPreview = `<div class="mb-4"><a href="${contest.externalUrl}" target="_blank" class="text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 p-3 rounded-2xl block text-center border border-indigo-200 transition-all"><i class="fa-solid fa-globe"></i> Перейти к заданию на платформе →</a></div>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between";
+        card.innerHTML = `
+          <div>
+            <span class="text-[10px] font-extrabold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg uppercase">${contest.category}</span>
+            <h3 class="font-extrabold text-slate-900 text-base mt-2 mb-2">${contest.title}</h3>
+            ${taskPreview}
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400 mb-4"><i class="fa-regular fa-clock"></i> Срок сдачи: ${contest.deadline}</div>
+            ${currentUser?.role === 'teacher' ? 
+              `<button type="button" onclick="filterAdminByContest('${contest.id}')" class="w-full py-2.5 bg-indigo-50 text-indigo-700 font-bold rounded-xl text-xs">Управлять олимпиадой</button>` :
+              `<button type="button" ${hasApplied ? 'disabled' : ''} onclick="openApplyModal('${contest.id}')" class="w-full py-2.5 ${hasApplied ? 'bg-slate-100 text-slate-400' : 'bg-indigo-600 text-white shadow-md'} font-bold rounded-xl text-xs">${hasApplied ? 'Ответ отправлен' : 'Решить и отправить ответ'}</button>`
+            }
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function setSubmissionType(type) {
+      activeSubmissionType = type;
+      ['File', 'Url', 'Text'].forEach(t => {
+        document.getElementById(`submissionField${t}`).classList.toggle('hidden', t.toLowerCase() !== type);
+        document.getElementById(`btnSubmissionType${t}`).className = `py-2.5 px-2 border-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 ${t.toLowerCase() === type ? 'border-indigo-600 bg-indigo-50/50 text-indigo-700' : 'border-slate-200 text-slate-600'}`;
+      });
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          selectedFileData = { name: file.name, size: (file.size / 1024 / 1024).toFixed(2) + ' MB', dataUrl: ev.target.result };
+          document.getElementById('dropZoneContent').classList.add('hidden');
+          document.getElementById('filePreview').classList.remove('hidden');
+          document.getElementById('fileName').textContent = selectedFileData.name;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    function removeSelectedFile(e) {
+      e.stopPropagation();
+      selectedFileData = null;
+      document.getElementById('filePreview').classList.add('hidden');
+      document.getElementById('dropZoneContent').classList.remove('hidden');
+    }
+
+    function openApplyModal(id) {
+      const contests = JSON.parse(localStorage.getItem('contests')) || [];
+      const contest = contests.find(c => c.id === id);
+      if (!contest) return;
+
+      document.getElementById('applyContestId').value = id;
+      document.getElementById('applyStudentName').value = currentUser.fullName;
+      document.getElementById('applyStudentClass').value = currentUser.userClass;
+      document.getElementById('modalContestHeaderTitle').textContent = contest.title;
+      
+      const taskTextEl = document.getElementById('applyContestTaskText');
+      const attachBlock = document.getElementById('applyContestAttachmentBlock');
+
+      if (contest.taskFormat === 'file' && contest.taskFile) {
+        taskTextEl.textContent = "Задание выдано в виде файла. Скачайте его по ссылке ниже:";
+        document.getElementById('applyContestFileLink').href = contest.taskFile.dataUrl;
+        document.getElementById('applyContestFileLink').download = contest.taskFile.name;
+        document.getElementById('applyContestFileLink').textContent = `Скачать файл задания (${contest.taskFile.name})`;
+        attachBlock.classList.remove('hidden');
+      } else if (contest.taskFormat === 'url' && contest.externalUrl) {
+        taskTextEl.innerHTML = `Задание находится на внешнем ресурсе: <a href="${contest.externalUrl}" target="_blank" class="text-indigo-600 underline">${contest.externalUrl}</a>`;
+        attachBlock.classList.add('hidden');
+      } else {
+        taskTextEl.textContent = contest.description || 'Условия не указаны';
+        attachBlock.classList.add('hidden');
+      }
+
+      setSubmissionType('file');
+      document.getElementById('applyModal').classList.remove('hidden');
+    }
+    function closeApplyModal() { document.getElementById('applyModal').classList.add('hidden'); }
+
+    function generateStudentVariant() {
+      const randA = Math.floor(Math.random() * 5) + 2;
+      const randB = Math.floor(Math.random() * 10) + 1;
+      alert(`Сгенерированы персональные параметры для вас:\n\nПараметр a = ${randA}, Параметр b = ${randB}\nИспользуйте их при решении задачи!`);
+    }
+
+    function submitApplication(e) {
+      e.preventDefault();
+      let workContent = null;
+      if (activeSubmissionType === 'file') {
+        if (!selectedFileData) { alert('Выберите файл с решением!'); return; }
+        workContent = { type: 'file', ...selectedFileData };
+      } else if (activeSubmissionType === 'url') {
+        workContent = { type: 'url', url: document.getElementById('applyWorkUrl').value };
+      } else {
+        workContent = { type: 'text', text: document.getElementById('applyWorkText').value };
+      }
+
+      const apps = JSON.parse(localStorage.getItem('applications')) || [];
+      apps.push({
+        id: 'app_' + Date.now(),
+        contestId: document.getElementById('applyContestId').value,
+        studentId: currentUser.id,
+        studentName: currentUser.fullName,
+        studentClass: currentUser.userClass,
+        workContent,
+        status: 'pending',
+        score: 0,
+        locked: false,
+        date: new Date().toLocaleDateString('ru-RU')
+      });
+      localStorage.setItem('applications', JSON.stringify(apps));
+      closeApplyModal();
+      alert('Ваше решение успешно отправлено учителю!');
+      renderCatalog();
+    }
+
+    function renderMyApplications() {
+      const apps = (JSON.parse(localStorage.getItem('applications')) || []).filter(a => a.studentId === currentUser.id);
+      const contests = JSON.parse(localStorage.getItem('contests')) || [];
+      document.getElementById('statTotalApps').textContent = apps.length;
+      document.getElementById('statAwards').textContent = apps.filter(a => ['winner_1','winner_2','winner_3'].includes(a.status)).length;
+      document.getElementById('statScore').textContent = apps.reduce((s, a) => s + a.score, 0);
+
+      const container = document.getElementById('myApplicationsList');
+      container.innerHTML = apps.length === 0 ? `<div class="p-12 text-center text-slate-400 text-xs">Нет отправленных решений</div>` : '';
+      apps.forEach(app => {
+        const c = contests.find(x => x.id === app.contestId) || {};
+        const canDownload = app.locked && ['winner_1','winner_2','winner_3','participant'].includes(app.status);
+        let statusTitleText = "Диплом участника";
+        if (app.status === 'winner_1') statusTitleText = "Диплом Победителя (I место)";
+        else if (app.status === 'winner_2') statusTitleText = "Диплом Призера (II место)";
+        else if (app.status === 'winner_3') statusTitleText = "Диплом Призера (III место)";
+
+        container.innerHTML += `
+          <div class="p-5 flex justify-between items-center">
+            <div>
+              <h4 class="font-bold text-sm">${c.title || 'Олимпиада'}</h4>
+              <span class="text-xs text-slate-400">Набрано баллов: ${app.score} | Статус: <b class="text-indigo-600">${statusTitleText}</b></span>
+            </div>
+            ${app.locked ? 
+              (canDownload ? `<button type="button" onclick="downloadDiploma('${app.id}')" class="px-4 py-2 bg-indigo-50 text-indigo-700 font-bold rounded-xl text-xs"><i class="fa-solid fa-file-arrow-down"></i> Скачать диплом</button>` : `<span class="text-xs text-emerald-600 font-bold"><i class="fa-solid fa-check"></i> Проверка завершена</span>`)
+              : `<span class="text-xs text-amber-600 font-medium italic"><i class="fa-solid fa-clock"></i> Проверка на модерации</span>`
+            }
+          </div>`;
+      });
+    }
+
+    function renderAdminApplications() {
+      const apps = JSON.parse(localStorage.getItem('applications')) || [];
+      const contests = JSON.parse(localStorage.getItem('contests')) || [];
+      const contestFilter = document.getElementById('adminContestFilter').value;
+      const statusFilter = document.getElementById('adminStatusFilter').value;
+      const tbody = document.getElementById('adminApplicationsTable');
+      tbody.innerHTML = '';
+
+      const filtered = apps.filter(a => {
+        const matchContest = (contestFilter === 'all' || a.contestId === contestFilter);
+        const matchStatus = (statusFilter === 'all' || a.status === statusFilter);
+        return matchContest && matchStatus;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">Решений по выбранным фильтрам нет</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(app => {
+        const c = contests.find(x => x.id === app.contestId) || {};
+        const isLocked = app.locked;
+
+        let workLinkBtn = `<span class="text-slate-400 italic">Нет данных</span>`;
+        if (app.workContent) {
+          if (app.workContent.type === 'file') {
+            workLinkBtn = `<a href="${app.workContent.dataUrl}" download="${app.workContent.name}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition-all"><i class="fa-solid fa-file-arrow-down"></i> ${app.workContent.name}</a>`;
+          } else if (app.workContent.type === 'url') {
+            workLinkBtn = `<a href="${app.workContent.url}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition-all"><i class="fa-solid fa-link"></i> Открыть ссылку</a>`;
+          } else if (app.workContent.type === 'text') {
+            workLinkBtn = `<button type="button" onclick="openViewStudentWorkModal('${app.id}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition-all"><i class="fa-solid fa-eye"></i> Просмотреть текст</button>`;
+          }
+        }
+
+        tbody.innerHTML += `
+          <tr class="border-b hover:bg-slate-50/50">
+            <td class="p-4 font-bold">${app.studentName}<br><span class="text-[10px] text-slate-400">${app.studentClass}</span></td>
+            <td class="p-4">${c.title || 'Удаленная олимпиада'}</td>
+            <td class="p-4">${workLinkBtn}</td>
+            <td class="p-4">
+              <select ${isLocked ? 'disabled' : ''} onchange="updateStatus('${app.id}', this.value)" class="border rounded p-1.5 text-xs font-semibold outline-none bg-white ${isLocked ? 'bg-slate-100 text-slate-500' : ''}">
+                <option value="pending" ${app.status==='pending'?'selected':''}>На проверке</option>
+                <option value="winner_1" ${app.status==='winner_1'?'selected':''}>Победитель (1 место)</option>
+                <option value="winner_2" ${app.status==='winner_2'?'selected':''}>Призер (2 место)</option>
+                <option value="winner_3" ${app.status==='winner_3'?'selected':''}>Призер (3 место)</option>
+                <option value="participant" ${app.status==='participant'?'selected':''}>Участник</option>
+              </select>
+            </td>
+            <td class="p-4"><input type="number" ${isLocked ? 'disabled' : ''} value="${app.score}" onchange="updateScore('${app.id}', this.value)" class="w-16 border rounded p-1.5 text-xs text-center font-bold ${isLocked ? 'bg-slate-100 text-slate-500' : ''}"></td>
+            <td class="p-4 text-right flex items-center justify-end gap-2">
+              ${isLocked ? 
+                `<span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-[10px] font-bold border border-emerald-200"><i class="fa-solid fa-lock"></i> Зафиксировано</span>
+                 <button type="button" onclick="toggleLockApp('${app.id}', false)" class="text-slate-400 hover:text-indigo-600 p-1.5" title="Разблокировать для правок"><i class="fa-solid fa-unlock"></i></button>` :
+                `<button type="button" onclick="toggleLockApp('${app.id}', true)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all flex items-center gap-1.5"><i class="fa-solid fa-check-circle"></i> Завершить проверку</button>`
+              }
+              <button type="button" onclick="deleteApp('${app.id}')" class="text-slate-400 hover:text-red-500 p-2" title="Удалить"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    function openViewStudentWorkModal(appId) {
+      const apps = JSON.parse(localStorage.getItem('applications')) || [];
+      const contests = JSON.parse(localStorage.getItem('contests')) || [];
+      const app = apps.find(x => x.id === appId);
+      if (!app) return;
+
+      const contest = contests.find(x => x.id === app.contestId) || {};
+      document.getElementById('modalWorkStudentName').textContent = app.studentName;
+      document.getElementById('modalWorkStudentClass').textContent = `Класс: ${app.studentClass}`;
+      document.getElementById('modalWorkContestTitle').textContent = contest.title || 'Олимпиада';
+
+      const contentArea = document.getElementById('modalWorkContentArea');
+      if (app.workContent?.type === 'text') {
+        contentArea.textContent = app.workContent.text || 'Текст пуст';
+      } else if (app.workContent?.type === 'url') {
+        contentArea.innerHTML = `Ссылка на решение: <a href="${app.workContent.url}" target="_blank" class="text-indigo-600 underline font-bold">${app.workContent.url}</a>`;
+      } else if (app.workContent?.type === 'file') {
+        contentArea.innerHTML = `Прикрепленный файл: <a href="${app.workContent.dataUrl}" download="${app.workContent.name}" class="text-indigo-600 underline font-bold">${app.workContent.name} (${app.workContent.size})</a>`;
+      } else {
+        contentArea.textContent = 'Нет данных о решении.';
+      }
+
+      document.getElementById('viewStudentWorkModal').classList.remove('hidden');
+    }
+
+    function closeViewStudentWorkModal() {
+      document.getElementById('viewStudentWorkModal').classList.add('hidden');
+    }
+
+    function updateStatus(id, st) {
+      const apps = JSON.parse(localStorage.getItem('applications')) || [];
+      const a = apps.find(x => x.id === id);
+      if (a && !a.locked) { 
+        a.status = st; 
+        localStorage.setItem('applications', JSON.stringify(apps));
+      }
+    }
+    function updateScore(id, sc) {
+      const apps = JSON.parse(localStorage.getItem('applications')) || [];
+      const a = apps.find(x => x.id === id);
+      if (a && !a.locked) { 
+        a.score = parseInt(sc) || 0; 
+        localStorage.setItem('applications', JSON.stringify(apps));
+      }
+    }
+    function toggleLockApp(id, lockState) {
+      const apps = JSON.parse(localStorage.getItem('applications')) || [];
+      const a = apps.find(x => x.id === id);
+      if (a) {
+        a.locked = lockState;
+        localStorage.setItem('applications', JSON.stringify(apps));
+        if (lockState) {
+          let labelName = "Проверка завершена!";
+          if (a.status === 'winner_1') labelName = "Победитель (I место)!";
+          else if (a.status === 'winner_2') labelName = "Призер (II место)!";
+          else if (a.status === 'winner_3') labelName = "Призер (III место)!";
+          addNotification(a.studentId, `Результаты вашей работы зафиксированы: ${labelName} Набрано баллов: ${a.score}`);
+        }
+        renderAdminApplications();
+      }
+    }
+    function deleteApp(id) {
+      let apps = JSON.parse(localStorage.getItem('applications')) || [];
+      localStorage.setItem('applications', JSON.stringify(apps.filter(x => x.id !== id)));
+      renderAdminApplications();
+    }
+
+    function updateSchoolPin() {
+      const pin = document.getElementById('changePinInput').value.trim();
+      if (pin) { localStorage.setItem('school_pin', pin); alert('PIN изменен!'); }
+    }
+
+    function downloadDiploma(id) {
+      const apps = JSON.parse(localStorage.getItem('applications')) || [];
+      const contests = JSON.parse(localStorage.getItem('contests')) || [];
+      const app = apps.find(x => x.id === id);
+      const c = contests.find(x => x.id === app.contestId) || {};
+      const canvas = document.getElementById('diplomaCanvas');
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, 1000, 700);
+      ctx.strokeStyle = "#312e81"; ctx.lineWidth = 14; ctx.strokeRect(20, 20, 960, 660);
+      
+      let diplomaTitle = "ДИПЛОМ УЧАСТНИКА";
+      let diplomaSub = "награждается за активное участие в конкурсе";
+      if (app.status === 'winner_1') {
+        diplomaTitle = "ДИПЛОМ ПОБЕДИТЕЛЯ";
+        diplomaSub = "награждается за I место в олимпиаде";
+      } else if (app.status === 'winner_2') {
+        diplomaTitle = "ДИПЛОМ ПРИЗЕРА";
+        diplomaSub = "награждается за II место в олимпиаде";
+      } else if (app.status === 'winner_3') {
+        diplomaTitle = "ДИПЛОМ ПРИЗЕРА";
+        diplomaSub = "награждается за III место в олимпиаде";
+      }
+
+      ctx.fillStyle = "#1e1b4b"; ctx.font = "bold 40px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(diplomaTitle, 500, 120);
+      
+      ctx.font = "18px sans-serif"; ctx.fillStyle = "#64748b";
+      ctx.fillText(diplomaSub, 500, 170);
+
+      ctx.font = "bold 36px sans-serif"; ctx.fillStyle = "#4338ca";
+      ctx.fillText(app.studentName, 500, 240);
+      
+      ctx.font = "20px sans-serif"; ctx.fillStyle = "#475569";
+      ctx.fillText(`Класс: ${app.studentClass}`, 500, 285);
+      
+      ctx.font = "bold 24px sans-serif"; ctx.fillStyle = "#0f172a";
+      ctx.fillText(`«${c.title}»`, 500, 375);
+
+      ctx.fillStyle = "#1e1b4b"; ctx.fillRect(820, 520, 110, 110);
+      ctx.fillStyle = "#fff"; ctx.fillRect(830, 530, 90, 90);
+      ctx.fillStyle = "#000";
+      for(let i=840; i<910; i+=12) {
+        for(let j=540; j<610; j+=12) {
+          if((i+j)%3 === 0) ctx.fillRect(i, j, 8, 8);
+        }
+      }
+
+      ctx.font = "bold 12px monospace"; ctx.fillStyle = "#64748b"; ctx.textAlign = "left";
+      ctx.fillText(`ID верификации: SECURE-HASH-${app.id.toUpperCase()}`, 60, 605);
+      ctx.fillText(`Подлинность документа подтверждена цифровой печатью Школы`, 60, 625);
+
+      const link = document.createElement('a');
+      link.download = `Диплом_${app.studentName}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function downloadPortfolio() {
+      if (!currentUser) return;
+      const apps = (JSON.parse(localStorage.getItem('applications')) || []).filter(a => a.studentId === currentUser.id);
+      const canvas = document.getElementById('diplomaCanvas');
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = "#f8fafc"; ctx.fillRect(0, 0, 1000, 700);
+      ctx.strokeStyle = "#4338ca"; ctx.lineWidth = 10; ctx.strokeRect(30, 30, 940, 640);
+
+      ctx.fillStyle = "#1e1b4b"; ctx.font = "bold 36px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("ЗАЩИЩЕННОЕ ПОРТФОЛИО УЧЕНИКА", 500, 90);
+
+      ctx.font = "bold 24px sans-serif"; ctx.fillStyle = "#312e81";
+      ctx.fillText(currentUser.fullName, 500, 140);
+      ctx.font = "18px sans-serif"; ctx.fillStyle = "#64748b";
+      ctx.fillText(`Класс: ${currentUser.userClass} | Платформа «Школьный Олимп»`, 500, 175);
+
+      ctx.beginPath(); ctx.moveTo(100, 205); ctx.lineTo(900, 205); ctx.strokeStyle = "#cbd5e1"; ctx.lineWidth = 2; ctx.stroke();
+
+      ctx.textAlign = "left"; ctx.font = "bold 18px sans-serif"; ctx.fillStyle = "#0f172a";
+      ctx.fillText("Подтвержденные цифровые победы:", 100, 245);
+
+      let y = 295;
+      if (apps.length === 0) {
+        ctx.font = "italic 16px sans-serif"; ctx.fillStyle = "#94a3b8";
+        ctx.fillText("У ученика пока нет зафиксированных заявок.", 100, y);
+      } else {
+        apps.slice(0, 4).forEach((app, index) => {
+          let statusStr = "На проверке";
+          if (app.status === 'winner_1') statusStr = "Победитель (I место)";
+          else if (app.status === 'winner_2') statusStr = "Призер (II место)";
+          else if (app.status === 'winner_3') statusStr = "Призер (III место)";
+          else if (app.status === 'participant') statusStr = "Участник";
+
+          ctx.font = "bold 16px sans-serif"; ctx.fillStyle = "#1e293b";
+          ctx.fillText(`${index + 1}. Заявка от ${app.date}`, 100, y);
+          ctx.font = "14px sans-serif"; ctx.fillStyle = "#475569";
+          ctx.fillText(`Статус: ${statusStr} | Набрано баллов: ${app.score}`, 120, y + 22);
+          y += 55;
+        });
+      }
+
+      ctx.fillStyle = "#1e1b4b"; ctx.fillRect(810, 520, 110, 110);
+      ctx.fillStyle = "#fff"; ctx.fillRect(820, 530, 90, 90);
+      ctx.fillStyle = "#000";
+      for(let i=830; i<900; i+=12) {
+        for(let j=540; j<610; j+=12) {
+          if((i+j)%4 === 0) ctx.fillRect(i, j, 8, 8);
+        }
+      }
+
+      ctx.font = "bold 12px monospace"; ctx.fillStyle = "#64748b"; ctx.textAlign = "left";
+      ctx.fillText(`Крипто-хэш портфолио: PORTFOLIO-HASH-${currentUser.id.toUpperCase()}`, 60, 580);
+      ctx.fillText(`Документ защищен от подделки на платформе «Школьный Олимп»`, 60, 605);
+
+      const link = document.createElement('a');
+      link.download = `Портфолио_${currentUser.fullName}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // ВЫГРУЗКА ЗАФИКСИРОВАННЫХ РЕЗУЛЬТАТОВ В EXCEL (CSV)
+    function exportCSVReport() {
+      const apps = JSON.parse(localStorage.getItem('applications')) || [];
+      const contests = JSON.parse(localStorage.getItem('contests')) || [];
+      
+      const finishedApps = apps.filter(a => a.locked);
+
+      if (finishedApps.length === 0) {
+        alert("Нет зафиксированных результатов для выгрузки! Сначала нажмите кнопку «Завершить проверку» на нужных работах.");
+        return;
+      }
+
+      let csv = "\uFEFFФИО Ученика;Класс;Олимпиада / Конкурс;Результат;Баллы;Дата сдачи\n";
+
+      finishedApps.forEach(a => {
+        const contest = contests.find(c => c.id === a.contestId) || {};
+        let resultLabel = "Участник";
+        if (a.status === 'winner_1') resultLabel = "Победитель (I место)";
+        else if (a.status === 'winner_2') resultLabel = "Призер (II место)";
+        else if (a.status === 'winner_3') resultLabel = "Призер (III место)";
+
+        const contestTitle = (contest.title || 'Олимпиада').replace(/"/g, '""');
+        const studentName = a.studentName.replace(/"/g, '""');
+
+        csv += `"${studentName}";"${a.studentClass}";"${contestTitle}";"${resultLabel}";${a.score};"${a.date || ''}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `Зафиксированные_результаты_${new Date().toLocaleDateString('ru-RU').replace(/\./g, '-')}.csv`;
+      link.click();
+    }
+
+    window.onload = function() {
+      if (currentUser) {
+        document.getElementById('authModal').classList.add('hidden');
+        updateUIForCurrentRole();
+      } else {
+        document.getElementById('authModal').classList.remove('hidden');
+      }
+    };
+  </script>
+</body>
+</html>
